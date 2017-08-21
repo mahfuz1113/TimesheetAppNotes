@@ -1,5 +1,3 @@
-testing readme
-more testing
 #comments
 
 # 1.git add
