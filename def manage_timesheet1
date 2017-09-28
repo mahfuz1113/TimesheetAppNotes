@@ -20,3 +20,50 @@ def manage_timesheet1(request, timesheet_id):
     else:
         return render(request, 'timesheet/manage_timesheet.html', {
                       'children_formset':formset, 'timesheetid':timesheet_id})
+
+
+
+class BaseTimesheetFormsetNew1(BaseModelFormSet):
+
+    def add_fields(self, form, index):
+        super(BaseTimesheetFormsetNew1, self).add_fields(form, index)
+
+        # save the formset in the 'nested' property
+        form.nested = TimesheetDetailFormsetNew1(
+                        instance=form.instance,
+                        data=form.data if form.is_bound else None,
+                        files=form.files if form.is_bound else None,
+                        prefix='address-%s-%s' % (
+                            form.prefix,
+                            TimesheetDetailFormsetNew1.get_default_prefix()),
+                        )
+
+    def is_valid(self):
+        result = super(BaseTimesheetFormsetNew1, self).is_valid()
+
+        if self.is_bound:
+            for form in self.forms:
+                if hasattr(form, 'nested'):
+                    result = result and form.nested.is_valid()
+
+        return result
+
+    def save(self, commit=True):
+
+        result = super(BaseTimesheetFormsetNew1, self).save(commit=commit)
+
+        for form in self.forms:
+            if hasattr(form, 'nested'):
+                if not self._should_delete_form(form):
+                    form.nested.save(commit=commit)
+
+        return result
+
+TimesheetFormSetNew1 = modelformset_factory(models.Timesheet,
+                                            form=TimesheetForm,
+                                            formset=BaseTimesheetFormsetNew1,
+                                            fields="__all__", extra=1)
+TimesheetDetailFormsetNew1 = inlineformset_factory(models.Timesheet,
+                                                    models.TimesheetDetail,
+                                                    fields="__all__",
+                                                    extra=7, max_num=7)
