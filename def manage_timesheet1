@@ -1,0 +1,22 @@
+def manage_timesheet1(request, timesheet_id):
+    """Edit children and their addresses for a single parent."""
+
+    parent = Timesheet.objects.filter(pk=timesheet_id)
+
+
+    if request.method == 'POST':
+        formset = TimesheetFormSetNew1(request.POST)
+        if formset.is_valid():
+            formset.save()
+            # return HttpResponseRedirect(reverse('nestedformset:nestedformset', 'parent_id'= parent_id))
+            return redirect('timesheet:timesheetlist')
+    else:
+        formset = TimesheetFormSetNew1(queryset=parent)
+        # formset = TimesheetFormSet()
+
+    if request.is_ajax():
+        return render(request, 'timesheet/_ajax_manage_timesheet.html', {
+                      'children_formset':formset, 'timesheetid':timesheet_id})
+    else:
+        return render(request, 'timesheet/manage_timesheet.html', {
+                      'children_formset':formset, 'timesheetid':timesheet_id})
